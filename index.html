@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <!--<link rel="stylesheet" type="text/css" href="./widgets_js/widgets_white_bg.css">
+        <link rel="stylesheet" type="text/css" href="./css/main.css">-->
+    </head>
+<body style="font-family: Helvetica,Arial,sans; font-size: 17px;">
+<div id="main">
+    <div id="main" style="text-align: center;">
+    <div id="figureContainer"></div>
+    <div id="figureContainer2"></div>
+</div>
+<div id="gallery">    
+</div>
+<br/>
+<br/>
+<br/>
+<!-- <input id="log_dt" type="range" min="0" max="3" step="0.05" value="2" style="width:250px;"/> 
+<label id="speed">speed</label><br/> -->
+ <script src="/d3.v4/d3.v4.min.js"></script>
+<!--<script src="https://d3js.org/d3.v4.min.js"></script>-->
+<!-- <script src="keybinding.js"></script> -->
+<script src="./fisheye.js"></script>
+<script src="./fisheye_grid_display.js"></script>
+<script>
+
+/*
+var this_url =  window.location.href;
+var url = new URL(this_url);
+var scale = url.searchParams.get("scale");
+var data = url.searchParams.get("data");
+console.log(scale);
+if ((scale == "null") || (scale === null))
+    scale = 1;
+if ((data == "null") || (data === null))
+    data = "ht09";
+
+console.log(scale);
+*/
+var width = 200;
+var eye = new fisheye(width/8,2,0.5);
+eye.focus([width/2,width/2]);
+var display = new fisheyeDisplay("#figureContainer",width,10,eye);
+display.draw();
+
+d3.select("canvas").on("mousemove", function () {
+                    let x = d3.event.layerX || d3.event.offsetX; 
+                    let y = d3.event.layerY || d3.event.offsetY;
+            eye.focus([x,y]);
+            display.draw();
+        })
+
+//var controls ;
+//var timer = d3.timeout( function () { controls = new temporalNetworkControlWidget(figure,"controlContainer"); }, 1000 ); 
+
+</script>
+</body>
