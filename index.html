@@ -23,10 +23,21 @@ eye.rangeY([0, width]);
 eye_sarkar.rangeX([0, width]);
 eye_sarkar.rangeY([0, width]);
 //eye.focus([width/2,width/2]);
-var display1 = new fisheyeDisplay("#figureContainer1",width,10,eye);
-var display3 = new fisheyeDisplay("#figureContainer3",width,10,eye_sarkar);
-var display2 = new fisheyeDisplay("#figureContainer2",width,10,eye,mode='cartesian');
-var display4 = new fisheyeDisplay("#figureContainer4",width,10,eye_sarkar, mode='cartesian');
+
+var ctx = [];
+['1','2','3','4'].forEach( function (d) {
+    var canvas = d3.select('#figureContainer'+d)
+          .append('canvas')
+          .attr('class', 'gridview')
+          .attr('width', width)
+          .attr('height', width);
+    var context = canvas.node().getContext('2d');
+    ctx.push(context);
+});
+var display1 = new fisheyeDisplay(ctx[0],width,eye);
+var display3 = new fisheyeDisplay(ctx[1],width,eye_sarkar);
+var display2 = new fisheyeDisplay(ctx[2],width,eye,mode='cartesian');
+var display4 = new fisheyeDisplay(ctx[3],width,eye_sarkar, mode='cartesian');
 
 var displays = [ display1, display2, display3, display4 ];
 draw();
