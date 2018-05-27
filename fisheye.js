@@ -86,6 +86,10 @@ class fisheye {
 
         return focus + Math.sign(dx) * dmax * new_r;
     }
+
+    fisheyeInverse(x,direction=0){
+        return fisheye(x,direction,true);
+    }
   
     fisheyeFunction(x){
       if ( (x<=0) || (x>=1) )
@@ -117,6 +121,10 @@ class fisheye {
         let x = this.fisheye(pos[0],0,inverse);
         let y = this.fisheye(pos[1],1,inverse);
         return [x,y];
+    }
+
+    fisheyeCartesianInverse(x) {
+        return this.fisheyecartesian(x, true);
     }
 
     solve_linear_equation(a,b,c,d,vector_b) {
@@ -266,6 +274,10 @@ class fisheye {
         newX[1] = fy + sin * dmax * new_r;
 
         return newX;
+    }
+
+    fisheyeRadialInverse(x) {
+        return this.fisheyeRadial(x, true);
     }
 
     fisheyeContinuous(x){
