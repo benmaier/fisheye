@@ -88,7 +88,7 @@ class fisheye {
     }
 
     fisheyeInverse(x,direction=0){
-        return fisheye(x,direction,true);
+        return this.fisheye(x,direction,true);
     }
   
     fisheyeFunction(x){
@@ -124,7 +124,7 @@ class fisheye {
     }
 
     fisheyeCartesianInverse(x) {
-        return this.fisheyecartesian(x, true);
+        return this.fisheyeCartesian(x, true);
     }
 
     solve_linear_equation(a,b,c,d,vector_b) {
@@ -192,6 +192,7 @@ class fisheye {
     }
 
     range(_){
+        if (!arguments.length) return this.range_x;
         return this.rangeX(_);
     }
     
@@ -213,7 +214,7 @@ class fisheye {
         return this;
     }
 
-    mode(_){
+    functionMode(_){
         if (!arguments.length) return this.mode;
         this.mode = _;
         return this;
