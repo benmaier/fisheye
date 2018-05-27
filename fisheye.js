@@ -2,38 +2,52 @@ class fisheye {
     constructor (
         r,
         d = 3,
-        xw = 0.4
+        xw = 0.4,
+        mode = 'continuous'
     )
     {
         this.r = r;
         this.x_max = null;
         this.x_min = null;
+
+        this.range_x = null;
+        this.range_y = null;
         this.magnification(d)
             .demagnificationWidth(xw);
+        this.mode = mode;
+
+        this.focus_x = null;
     }
 
-    fisheye(x){
+    fisheye(x,direction = 0){
 
         if (this.focus_x === null)
             return x;
 
-        let dx = x - this.focus_x;
+        let focus = this.focus_x[direction];
 
-        if ((Math.abs(dx) > this.r) || (x == this.focus_x))
+        let dx = x - focus;
+
+        if ((Math.abs(dx) > this.r) || (x == focus))
             return x;
 
         let dmax = this.r;
+        let range;
+        if (direction == 0)
+            range = this.range_x;
+        else
+            range = this.range_y;
 
         if (dx > 0){
-            if (! (this.xmax === null) )
-                if ( this.xmax - this.focus_x < this.r)
-                    dmax = this.xmax - this.focus_x;
+            if (! (range === null) )
+                if ( range[1] - focus < this.r)
+                    dmax = range[1] - focus;
         } 
         else if (dx < 0)
         {
-            if (! (this.xmin === null) )
-                if ( this.focus_x - this.xmin < this.r)
-                    dmax = this.focus_x - this.xmin;
+            if (! (range === null) )
+                if ( focus - range[0] < this.r)
+                    dmax = focus - range[0];
         }
 
         let d = this.d;
@@ -43,11 +57,22 @@ class fisheye {
 
         let rescaled = Math.abs(dx) / dmax;
 
-        if (rescaled <= xc)
-            return this.focus_x + Math.sign(dx) * dmax * Math.pow(d/A2*rescaled,(1/d));
+        let new_r;
+
+        if (this.mode == 'continuous')
+            new_r = this.fisheyeContinuous(rescaled);
+        else if (this.mode == 'sarkar')
+            new_r = this.fisheyeSarkar(rescaled);
         else
-            return this.focus_x + Math.sign(dx) * dmax * 
-                                  (1 - ( -1/A1 + Math.sqrt(1/(A1*A1) + 2*(1-rescaled)/A1) ) );
+            throw 'Unknown mode "'+ this.mode + '"';
+
+        return focus + Math.sign(dx) * dmax * new_r;
+    }
+
+    fisheyeCartesian(pos) {
+        let x = this.fisheye(pos[0],0);
+        let y = this.fisheye(pos[1],1);
+        return [x,y];
     }
 
     solve_linear_equation(a,b,c,d,vector_b) {
@@ -66,14 +91,16 @@ class fisheye {
     {
         let xw = this.xw;
         let d = this.d;
-        let A = this.solve_linear_equation( Math.pow(xw,2)/2.,  Math.pow(1-xw,d)/d, 
-                                            xw,                -Math.pow(1-xw,d-1),
-                                            [ -(xw-1), -1 ]);
+        let A = this.solve_linear_equation( Math.pow(xw,2)/2., 1 - ((d+1)*xw / (d*xw+1)), 
+                                            xw,                - (d+1) / Math.pow(d*xw+1,2),
+                                            [ (1-xw), -1 ]);
         this.A1 = A[0];
         this.A2 = A[1];
 
         // this is the critical value of x where the used function changes
         this.xc = 1 - (this.A1/2 * Math.pow(xw,2) + xw);
+
+        console.log(this.A1, this.A2, this.xc);
 
         return this;
     }
@@ -99,10 +126,19 @@ class fisheye {
         return this.rescale();
     }
 
+    rangeX(_){
+        if (!arguments.length) return this.range_x;
+        this.range_x = _;
+        return this;
+    }
+
     range(_){
-        if (!arguments.length) return [this.xmin, this.xmax];
-        this.xmin = _[0];
-        this.xmax = _[1];
+        return rangeX(_);
+    }
+    
+    rangeY(_){
+        if (!arguments.length) return this.range_y;
+        this.range_y = _;
         return this;
     }
     
@@ -123,13 +159,13 @@ class fisheye {
         if ((this.focus_x === null)|| (typeof this.focus_x == 'undefined'))
             return pos;
 
-        let y = pos[1];
         let x = pos[0];
+        let y = pos[1];
 
         let fx = this.focus_x[0];
         let fy = this.focus_x[1];
 
-        let dr = Math.sqrt( Math.pow(x-fx,2) + Math.pow(x-fy,2) );
+        let dr = Math.sqrt( Math.pow(x-fx,2) + Math.pow(y-fy,2) );
 
         if ((Math.abs(dr) > this.r) || (dr == 0))
         {
@@ -147,18 +183,38 @@ class fisheye {
         let A1 = this.A1;
         let A2 = this.A2;
 
-        let rescaled = Math.abs(dr) / dmax;
+        let rescaled = dr / dmax;
         let newX = [0,0];
         let new_r;
 
-        if (rescaled <= xc)
-            new_r = Math.pow(d/A2*rescaled,(1/d));
-        else
-            new_r = (1 - ( -1/A1 + Math.sqrt(1/(A1*A1) + 2*(1-rescaled)/A1) ) );
+        if (this.mode == 'continuous')
+            new_r = this.fisheyeContinuous(rescaled);
+        else if (this.mode == 'sarkar')
+            new_r = this.fisheyeSarkar(rescaled);
 
         newX[0] = fx + cos * dmax * new_r;
         newX[1] = fy + sin * dmax * new_r;
 
         return newX;
+    }
+
+    fisheyeContinuous(x){
+        if (x <= this.xc)            
+            return (x * (this.d+1)) / (this.d*x + this.A2);
+        else
+            return 1 - ( -1/this.A1 + Math.sqrt(1/(this.A1*this.A1) + 2*(1-x)/this.A1) ) ;
+    }
+
+    /*
+    fisheyeInverseContinuous(x){
+        if (x <= this.xc)            
+            return x*this.A2 / (this.d*(1-x) + 1);
+        else
+            return this.x - (this.A1 / 2 *Math.pow(1-x,2));
+    }
+    */
+
+    fisheyeSarkar(x) {
+        return (this.d+1) * x / (this.d*x + 1);
     }
 }

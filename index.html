@@ -8,9 +8,10 @@
     </head>
 <body style="font-family: Helvetica,Arial,sans; font-size: 17px;">
 <div id="main">
-    <div id="main" style="text-align: center;">
-    <div id="figureContainer"></div>
+    <div id="figureContainer1" style="float: left; padding-right: 20px;"></div>
     <div id="figureContainer2"></div>
+    <div id="figureContainer3" style="float: left; padding-right: 20px;"></div>
+    <div id="figureContainer4"></div>
 </div>
 <div id="gallery">    
 </div>
@@ -23,7 +24,7 @@
 <!--<script src="https://d3js.org/d3.v4.min.js"></script>-->
 <!-- <script src="keybinding.js"></script> -->
 <script src="./fisheye.js"></script>
-<script src="./fisheye_grid_display.js"></script>
+<script src="./fisheye_display.js"></script>
 <script>
 
 /*
@@ -39,18 +40,40 @@ if ((data == "null") || (data === null))
 
 console.log(scale);
 */
-var width = 200;
-var eye = new fisheye(width/8,2,0.5);
-eye.focus([width/2,width/2]);
-var display = new fisheyeDisplay("#figureContainer",width,10,eye);
-display.draw();
+var width = 300;
+var eye = new fisheye(width/3,3,0.4);
+var eye_sarkar = new fisheye(width/3,1.5,0.5,mode='sarkar');
+eye.rangeX([0, width]);
+eye.rangeY([0, width]);
+eye_sarkar.rangeX([0, width]);
+eye_sarkar.rangeY([0, width]);
+//eye.focus([width/2,width/2]);
+var display1 = new fisheyeDisplay("#figureContainer1",width,10,eye);
+var display3 = new fisheyeDisplay("#figureContainer3",width,10,eye_sarkar);
+var display2 = new fisheyeDisplay("#figureContainer2",width,10,eye,mode='cartesian');
+var display4 = new fisheyeDisplay("#figureContainer4",width,10,eye_sarkar, mode='cartesian');
 
-d3.select("canvas").on("mousemove", function () {
-                    let x = d3.event.layerX || d3.event.offsetX; 
-                    let y = d3.event.layerY || d3.event.offsetY;
+var displays = [ display1, display2, display3, display4 ];
+draw();
+
+d3.selectAll(".gridview").on("mousemove", function () {
+            let x = d3.event.layerX || d3.event.offsetX; 
+            let y = d3.event.layerY || d3.event.offsetY;
             eye.focus([x,y]);
-            display.draw();
+            eye_sarkar.focus([x,y]);
+            draw();
         })
+        .on("mouseout", function () {
+            eye.focus(null);
+            eye_sarkar.focus(null);
+            draw();
+        });
+
+function draw() {
+    displays.forEach( function (d) {
+        d.draw();
+    });
+}
 
 //var controls ;
 //var timer = d3.timeout( function () { controls = new temporalNetworkControlWidget(figure,"controlContainer"); }, 1000 ); 
