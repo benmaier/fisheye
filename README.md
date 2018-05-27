@@ -4,8 +4,9 @@ Check out [the interactive notebook](https://beta.observablehq.com/@benmaier/a-v
 
 ## Usage
 
-```javascript
+Be sure that you loaded d3 v4 or v5 before using the fisheye class.
 
+```javascript
 // initialize
 let radius = 100;
 let f = new fisheye(radius);
