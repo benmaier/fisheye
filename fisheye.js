@@ -205,6 +205,12 @@ class fisheye {
         return this;
     }
 
+    mode(_){
+        if (!arguments.length) return this.mode;
+        this.mode = _;
+        return this;
+    }
+
     fisheyeRadial(pos,inverse = false){
 
         if ((this.focus_x === null)|| (typeof this.focus_x == 'undefined'))
